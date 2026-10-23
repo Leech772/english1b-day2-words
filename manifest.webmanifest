@@ -1,0 +1,11 @@
+{
+  "name": "Day2 拼写测试 · U3住房 + U4购物",
+  "short_name": "Day2拼写",
+  "description": "看中文听发音拼英文，进度可本地保存",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f1ea",
+  "theme_color": "#f4f1ea",
+  "lang": "zh-CN",
+  "orientation": "portrait-primary"
+}

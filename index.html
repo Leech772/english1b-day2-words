@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Day2拼写"/>
+<meta name="theme-color" content="#f4f1ea"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<link rel="manifest" href="manifest.webmanifest"/>
+<title>Day2 拼写测试 · U3住房 + U4购物</title>
+<style>
+:root{--bg:#f4f1ea;--bg2:#e8eef6;--card:#fff;--accent:#3b82f6;--accent2:#2563eb;--good:#16a34a;--bad:#dc2626;--warn:#d97706;--speak:#7c3aed;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--shadow:0 8px 28px rgba(15,23,42,.08);--sm:0 2px 10px rgba(15,23,42,.06)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:radial-gradient(1200px 600px at 10% -10%,#dbeafe 0%,transparent 55%),linear-gradient(180deg,var(--bg),var(--bg2));color:var(--text);display:flex;flex-direction:column;align-items:center;padding:16px 14px 48px;gap:12px}
+.w{width:min(440px,100%)}
+h1{font-size:1.12rem;margin:4px 0 0;font-weight:750;color:#0f172a;text-align:center}
+.sub{color:var(--muted);font-size:.8rem;margin:0;text-align:center;line-height:1.45}
+.save{font-size:.72rem;color:var(--good);opacity:0;transition:opacity .3s}.save.show{opacity:1}
+.box{background:#fff;border:1px solid var(--border);border-radius:14px;padding:10px 12px;box-shadow:var(--sm)}
+.voice .line{font-size:.82rem}.voice b{color:var(--accent2)}
+.voice select{width:100%;margin-top:6px;padding:8px;border-radius:10px;border:1px solid var(--border);background:#f7f9fc;font-size:.82rem}
+.voice .tip{font-size:.74rem;color:var(--warn);margin-top:4px;display:none}.voice .tip.show{display:block}
+.counts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.counts div{background:#fff;border:1px solid var(--border);border-radius:12px;padding:8px;text-align:center;box-shadow:var(--sm)}
+.counts b{display:block;font-size:1.3rem;color:var(--accent2)}.counts span{font-size:.75rem;color:var(--muted)}
+.progress{height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden}
+.progress>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#60a5fa,#2563eb);transition:width .25s}
+.phase{font-size:.8rem;text-align:center;color:var(--muted)}
+.phase.final{color:#c2410c;font-weight:700}
+.card{background:var(--card);border-radius:20px;padding:22px 18px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.tag{font-size:.7rem;padding:3px 9px;border-radius:99px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.tag.rep{background:#fff7ed;color:#c2410c;border-color:#fdba74}
+.pos{font-size:.85rem;color:#7c3aed;font-weight:650}
+.zh{font-size:1.7rem;font-weight:750;color:#0f172a}
+.en{font-size:1.9rem;font-weight:750;color:var(--good);display:none}
+.phon{font-size:.95rem;color:var(--muted);display:none}
+.card.rev .en,.card.rev .phon{display:block}
+.row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+button{border:1px solid var(--border);border-radius:999px;padding:10px 16px;font-size:.92rem;cursor:pointer;background:#fff;color:var(--text);box-shadow:var(--sm);font-family:inherit}
+.spk{background:linear-gradient(180deg,#8b5cf6,var(--speak));color:#fff;border:none;font-weight:650;font-size:1rem;padding:12px 20px}
+.spk.slow{background:linear-gradient(180deg,#7c3aed,#6d28d9)}
+input#ans{width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:#f7f9fc;font-size:1.15rem;outline:none;text-align:center}
+input#ans:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+.b-sub{background:linear-gradient(180deg,#4f94ff,var(--accent));color:#fff;border:none;font-weight:700;flex:1}
+.b-fuz{background:#fffbeb;color:#b45309;border-color:#fcd34d;font-weight:700;flex:1}
+.b-no{background:#fef2f2;color:#b91c1c;border-color:#fca5a5;font-weight:700;flex:1}
+.b-next{background:linear-gradient(180deg,#4f94ff,var(--accent));color:#fff;border:none;font-weight:700;width:100%}
+.fb{font-size:.92rem;font-weight:650;text-align:center;min-height:1.2em}
+.fb.ok{color:var(--good)}.fb.bad{color:var(--bad)}.fb.mid{color:#b45309}
+.ex{display:none;text-align:left;background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:12px}
+.ex.show{display:block}
+.ex .e{font-size:.95rem;line-height:1.5}.ex .c{font-size:.86rem;color:var(--muted);margin-top:4px}
+.method{font-size:.74rem;color:var(--muted);text-align:center;line-height:1.45}
+.danger{background:#fef2f2;color:#991b1b;border-color:#fecaca;font-size:.8rem}
+.done{display:none;text-align:center}.done.show{display:block}
+label.auto{font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:4px}
+
+.ios-banner{width:min(440px,100%);background:linear-gradient(180deg,#fff7ed,#ffedd5);border:1.5px solid #fdba74;border-radius:14px;padding:12px 14px;box-shadow:var(--sm);color:#9a3412;font-size:.84rem;line-height:1.55}
+.ios-banner strong{display:block;font-size:.95rem;color:#c2410c;margin-bottom:4px}
+.ios-banner ol{margin:6px 0 0;padding-left:1.2em}
+.ios-banner li{margin:2px 0}
+.ios-banner .warn{color:#b45309;font-weight:650}
+</style></head><body>
+<div class="ios-banner" role="note">
+  <strong>📱 iPhone 必读 · 否则进度会丢</strong>
+  <div>请用 <b>Safari</b> 打开本网址（不要用微信/QQ 内置浏览器预览）。</div>
+  <ol>
+    <li>Safari 打开后点「分享」→ <b>添加到主屏幕</b>，以后从桌面图标进最稳。</li>
+    <li class="warn">聊天里直接点开预览会丢进度（WKWebView 关窗即清存储）。</li>
+    <li>换手机或重装前，先点下方「导出进度」备份。</li>
+  </ol>
+</div>
+<h1>Day2 拼写测试 · U3住房 + U4购物</h1>
+<p class="sub">看中文 → 听发音 → 拼英文 · 共 41 词 <span class="save" id="save">✓ 已保存</span></p>
+<div class="w box voice">
+  <div class="line">🔊 当前朗读：<b id="vName">检测中…</b> <span id="vTag"></span></div>
+  <select id="vSel"></select>
+  <div class="tip" id="vTip">未检测到英式女声。请用 Chrome，或在系统安装「英语（英国）」语音包。</div>
+</div>
+<div class="w counts">
+  <div><b id="cLeft">0</b><span>剩余</span></div>
+  <div><b id="cDone">0</b><span>已掌握</span></div>
+  <div><b id="cRep">0</b><span>待重复</span></div>
+</div>
+<div class="w progress"><i id="bar"></i></div>
+<div class="w phase" id="phase">第一轮</div>
+<div class="w phase" id="restore" style="color:#15803d"></div>
+
+<div class="w card" id="card">
+  <div class="row"><span class="tag" id="unit">U3</span><span class="tag rep" id="repTag" style="display:none"></span></div>
+  <div class="pos" id="pos"></div>
+  <div class="zh" id="zh">—</div>
+  <div class="en" id="en"></div>
+  <div class="phon" id="phon"></div>
+</div>
+<div class="w row">
+  <button class="spk" id="sp">🔊 听发音</button>
+  <button class="spk slow" id="spSlow">🐢 慢速</button>
+</div>
+<div class="w row"><label class="auto"><input type="checkbox" id="auto"/> 出卡自动播放</label></div>
+<div class="w" id="inputArea">
+  <input id="ans" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="输入英文…"/>
+  <div class="row" style="margin-top:10px">
+    <button class="b-sub" id="bSub">提交</button>
+    <button class="b-fuz" id="bFuz">模糊</button>
+    <button class="b-no" id="bNo">不会</button>
+  </div>
+</div>
+<div class="w fb" id="fb"></div>
+<div class="w ex" id="ex">
+  <div class="e" id="exEn"></div><div class="c" id="exZh"></div>
+  <div class="row" style="margin-top:8px"><button id="spEx">📖 读例句</button></div>
+</div>
+<div class="w" id="nextArea" style="display:none"><button class="b-next" id="bNext">下一词 →</button></div>
+
+<div class="w box done" id="done">
+  <h2 style="margin:6px 0">全部拼对啦 🎉</h2>
+  <p class="sub" id="doneMsg"></p>
+  <div class="row" style="margin-top:10px"><button class="b-sub" id="bRestart">重新开始一轮</button></div>
+</div>
+
+<p class="w method">记忆方法：U3/U4 交替、拼写相近词隔开、难词靠前；模糊再拼对 2 次、不会/拼错再拼对 3 次，隔 3–8 词重现；最后收尾轮清零。</p>
+<div class="w row"><button id="bExport">📤 导出进度</button><button id="bImport">📥 导入进度</button><button class="danger" id="bClear">清除进度</button></div>
+<div class="w phase" id="ioMsg"></div>
+<p class="w method" style="color:#b45309">📱 再提醒：本页挂在 HTTPS 同一域名时 Safari 的 localStorage 才会持久。聊天预览不可靠 → Safari 打开 → 分享「添加到主屏幕」。随时可用「导出/导入进度」备份。</p>
+
+<script>
+const WORDS = [{"unit": "U3", "en": "sofa", "phon": "/ˈsəʊfə/", "pos": "n.", "zh": "沙发", "exEn": "Please sit on the sofa.", "exZh": "请坐在沙发上。", "posZh": "名词"}, {"unit": "U3", "en": "oven", "phon": "/ˈʌvn/", "pos": "n.", "zh": "烤箱", "exEn": "Put the cake into the oven.", "exZh": "把蛋糕放进烤箱。", "posZh": "名词"}, {"unit": "U3", "en": "fridge", "phon": "/frɪdʒ/", "pos": "n.", "zh": "冰箱", "exEn": "There is milk in the fridge.", "exZh": "冰箱里有牛奶。", "posZh": "名词"}, {"unit": "U3", "en": "study", "phon": "/ˈstʌdi/", "pos": "n./v.", "zh": "书房；学习", "exEn": "He is reading in the study.", "exZh": "他在书房里看书。", "posZh": "名词/动词"}, {"unit": "U3", "en": "kitchen", "phon": "/ˈkɪtʃɪn/", "pos": "n.", "zh": "厨房", "exEn": "Mum is cooking in the kitchen.", "exZh": "妈妈在厨房做饭。", "posZh": "名词"}, {"unit": "U3", "en": "apartment", "phon": "/əˈpɑːtmənt/", "pos": "n.", "zh": "公寓", "exEn": "I live in a small apartment.", "exZh": "我住在一间小公寓里。", "posZh": "名词"}, {"unit": "U3", "en": "lamp", "phon": "/læmp/", "pos": "n.", "zh": "灯", "exEn": "Turn on the lamp, please.", "exZh": "请把灯打开。", "posZh": "名词"}, {"unit": "U3", "en": "bedroom", "phon": "/ˈbedruːm/", "pos": "n.", "zh": "卧室", "exEn": "My bedroom is clean and quiet.", "exZh": "我的卧室干净又安静。", "posZh": "名词"}, {"unit": "U3", "en": "bathroom", "phon": "/ˈbɑːθruːm/", "pos": "n.", "zh": "浴室；洗手间", "exEn": "The bathroom is next to my room.", "exZh": "浴室在我房间旁边。", "posZh": "名词"}, {"unit": "U3", "en": "floor", "phon": "/flɔː(r)/", "pos": "n.", "zh": "地板；楼层", "exEn": "She is cleaning the floor.", "exZh": "她正在打扫地板。", "posZh": "名词"}, {"unit": "U3", "en": "water", "phon": "/ˈwɔːtə(r)/", "pos": "v.", "zh": "浇水", "exEn": "He waters the flowers every morning.", "exZh": "他每天早上浇花。", "posZh": "动词"}, {"unit": "U3", "en": "armchair", "phon": "/ˈɑːmtʃeə(r)/", "pos": "n.", "zh": "扶手椅", "exEn": "Grandpa likes this soft armchair.", "exZh": "爷爷喜欢这把软扶手椅。", "posZh": "名词"}, {"unit": "U3", "en": "opposite", "phon": "/ˈɒpəzɪt/", "pos": "prep./adj.", "zh": "在……对面；对面的", "exEn": "The bank is opposite the school.", "exZh": "银行在学校对面。", "posZh": "介词/形容词"}, {"unit": "U3", "en": "upstairs", "phon": "/ˌʌpˈsteəz/", "pos": "adv.", "zh": "在楼上；往楼上", "exEn": "My sister is upstairs now.", "exZh": "我姐姐现在在楼上。", "posZh": "副词"}, {"unit": "U3", "en": "between", "phon": "/bɪˈtwiːn/", "pos": "prep.", "zh": "在……之间", "exEn": "The lamp is between the sofa and the table.", "exZh": "灯在沙发和桌子之间。", "posZh": "介词"}, {"unit": "U3", "en": "fresh", "phon": "/freʃ/", "pos": "adj.", "zh": "新鲜的", "exEn": "I like fresh fruit.", "exZh": "我喜欢新鲜水果。", "posZh": "形容词"}, {"unit": "U3", "en": "dining room", "phon": "", "pos": "", "zh": "餐厅", "exEn": "We eat dinner in the dining room.", "exZh": "我们在餐厅吃晚饭。", "posZh": "词组"}, {"unit": "U3", "en": "living room", "phon": "", "pos": "", "zh": "客厅", "exEn": "They are watching TV in the living room.", "exZh": "他们在客厅看电视。", "posZh": "词组"}, {"unit": "U3", "en": "next to", "phon": "", "pos": "", "zh": "紧挨着；在……旁边", "exEn": "The fridge is next to the oven.", "exZh": "冰箱紧挨着烤箱。", "posZh": "词组"}, {"unit": "U3", "en": "make tea", "phon": "", "pos": "", "zh": "沏茶", "exEn": "Can you make tea for me?", "exZh": "你能给我沏杯茶吗？", "posZh": "词组"}, {"unit": "U3", "en": "go upstairs", "phon": "", "pos": "", "zh": "上楼", "exEn": "Please go upstairs and get your bag.", "exZh": "请上楼去拿你的包。", "posZh": "词组"}, {"unit": "U3", "en": "at the corner of", "phon": "", "pos": "", "zh": "在……的拐角处", "exEn": "The shop is at the corner of the street.", "exZh": "商店在街道的拐角处。", "posZh": "词组"}, {"unit": "U4", "en": "reasonable", "phon": "/ˈriːznəbl/", "pos": "adj.", "zh": "合理的；公道的", "exEn": "The price is reasonable.", "exZh": "这个价格很公道。", "posZh": "形容词"}, {"unit": "U4", "en": "supermarket", "phon": "/ˈsuːpəmɑːkɪt/", "pos": "n.", "zh": "超市", "exEn": "We buy food at the supermarket.", "exZh": "我们在超市买食物。", "posZh": "名词"}, {"unit": "U4", "en": "sweater", "phon": "/ˈswetə(r)/", "pos": "n.", "zh": "毛衣", "exEn": "This sweater keeps me warm.", "exZh": "这件毛衣让我很暖和。", "posZh": "名词"}, {"unit": "U4", "en": "favorite", "phon": "/ˈfeɪvərɪt/", "pos": "adj./n.", "zh": "最喜爱的；最爱", "exEn": "Blue is my favorite color.", "exZh": "蓝色是我最喜爱的颜色。", "posZh": "形容词/名词"}, {"unit": "U4", "en": "expensive", "phon": "/ɪkˈspensɪv/", "pos": "adj.", "zh": "昂贵的", "exEn": "That suit is too expensive.", "exZh": "那套西装太贵了。", "posZh": "形容词"}, {"unit": "U4", "en": "cheap", "phon": "/tʃiːp/", "pos": "adj.", "zh": "便宜的", "exEn": "These sneakers are cheap but nice.", "exZh": "这些运动鞋便宜又好看。", "posZh": "形容词"}, {"unit": "U4", "en": "suit", "phon": "/suːt/", "pos": "n.", "zh": "套装；西装", "exEn": "He wears a black suit to work.", "exZh": "他穿黑西装上班。", "posZh": "名词"}, {"unit": "U4", "en": "dress", "phon": "/dres/", "pos": "n.", "zh": "连衣裙；女装", "exEn": "She bought a green dress.", "exZh": "她买了一条绿裙子。", "posZh": "名词"}, {"unit": "U4", "en": "fashion", "phon": "/ˈfæʃn/", "pos": "n.", "zh": "时尚；时装", "exEn": "She loves fashion magazines.", "exZh": "她喜欢时尚杂志。", "posZh": "名词"}, {"unit": "U4", "en": "medium", "phon": "/ˈmiːdiəm/", "pos": "adj./n.", "zh": "中号的；中等", "exEn": "I wear a medium size.", "exZh": "我穿中号。", "posZh": "形容词/名词"}, {"unit": "U4", "en": "sneaker", "phon": "/ˈsniːkə(r)/", "pos": "n.", "zh": "运动鞋", "exEn": "I need a new sneaker for PE.", "exZh": "体育课我需要一双新运动鞋。", "posZh": "名词"}, {"unit": "U4", "en": "ordinary", "phon": "/ˈɔːdnri/", "pos": "adj.", "zh": "普通的", "exEn": "It looks like an ordinary bag.", "exZh": "它看起来像个普通的包。", "posZh": "形容词"}, {"unit": "U4", "en": "quality", "phon": "/ˈkwɒləti/", "pos": "n.", "zh": "质量", "exEn": "Good quality is important.", "exZh": "好的质量很重要。", "posZh": "名词"}, {"unit": "U4", "en": "cost", "phon": "/kɒst/", "pos": "v./n.", "zh": "花费；费用", "exEn": "How much does it cost?", "exZh": "这个要花多少钱？", "posZh": "动词/名词"}, {"unit": "U4", "en": "budget", "phon": "/ˈbʌdʒɪt/", "pos": "n.", "zh": "预算", "exEn": "It is within my budget.", "exZh": "这在我的预算之内。", "posZh": "名词"}, {"unit": "U4", "en": "suitable", "phon": "/ˈsuːtəbl/", "pos": "adj.", "zh": "合适的", "exEn": "This dress is suitable for school.", "exZh": "这条裙子适合上学穿。", "posZh": "形容词"}, {"unit": "U4", "en": "shopping center", "phon": "", "pos": "", "zh": "购物中心", "exEn": "Let's meet at the shopping center.", "exZh": "我们在购物中心见面吧。", "posZh": "词组"}, {"unit": "U4", "en": "on sale", "phon": "", "pos": "", "zh": "打折出售；特价", "exEn": "These shoes are on sale today.", "exZh": "这些鞋子今天特价。", "posZh": "词组"}, {"unit": "U4", "en": "gadget store", "phon": "", "pos": "", "zh": "数码/小电器商店", "exEn": "I bought a charger at the gadget store.", "exZh": "我在小电器店买了充电器。", "posZh": "词组"}];
+const LS="english1b_day2_spell_v1";
+const $=id=>document.getElementById(id);
+const REP_FUZZY=2, REP_NO=3;
+
+/* ---------- ordering ---------- */
+function diff(w){ return w.en.replace(/ /g,"").length + (w.en.includes(" ")?3:0); }
+function similar(a,b){
+  const x=WORDS[a].en.toLowerCase(), y=WORDS[b].en.toLowerCase();
+  return x.slice(0,3)===y.slice(0,3) || x.slice(-3)===y.slice(-3);
+}
+function buildOrder(){
+  const byU=u=>WORDS.map((w,i)=>i).filter(i=>WORDS[i].unit===u)
+    .sort((a,b)=>diff(WORDS[b])-diff(WORDS[a])+ (Math.random()-.5)*4);
+  const a=byU("U3"), b=byU("U4"), out=[];
+  while(a.length||b.length){ if(a.length) out.push(a.shift()); if(b.length) out.push(b.shift()); }
+  for(let k=1;k<out.length;k++){
+    if(similar(out[k-1],out[k])){
+      for(let j=k+1;j<out.length;j++){
+        if(!similar(out[k-1],out[j]) && (j+1>=out.length||!similar(out[k],out[j+1]))){ [out[k],out[j]]=[out[j],out[k]]; break; }
+      }
+    }
+  }
+  return out;
+}
+
+/* ---------- state ---------- */
+function fresh(){
+  return { queue: buildOrder(), reps:{}, mastered:[], hard:[], phase:"main", finalNeed:{}, total:WORDS.length, auto:false, voice:"" };
+}
+let S;
+/* ---------- multi-layer storage ---------- */
+function packState(s){
+  const N=WORDS.length, r=[]; for(let i=0;i<N;i++) r.push(s.reps[i]||0);
+  return {v:1,t:s.t||Date.now(),q:s.queue,r:r,m:s.mastered,h:s.hard,p:s.phase==="final"?1:0,
+    f:Object.keys(s.finalNeed||{}).map(Number),a:s.auto?1:0,vo:s.voice||"",pd:s.pend==="all"?2:s.pend==="shift"?1:0,
+    rv:s.rev?[s.rev.msg,s.rev.cls]:0};
+}
+function unpackState(o){
+  const s=fresh(); const N=WORDS.length, ok=a=>Array.isArray(a)&&a.every(x=>Number.isInteger(x)&&x>=0&&x<N);
+  if(!o||o.v!==1||!ok(o.q)||!ok(o.m||[])||!ok(o.h||[])) return null;
+  s.t=o.t||0; s.queue=o.q; s.mastered=o.m||[]; s.hard=o.h||[]; s.phase=o.p?"final":"main";
+  s.reps={}; (o.r||[]).forEach((n,i)=>{ if(n>0) s.reps[i]=n; });
+  s.finalNeed={}; (o.f||[]).forEach(i=>s.finalNeed[i]=1);
+  s.auto=!!o.a; s.voice=o.vo||""; s.pend=o.pd===2?"all":o.pd===1?"shift":null;
+  s.rev=Array.isArray(o.rv)?{msg:o.rv[0],cls:o.rv[1]}:null;
+  if(!s.queue.length && s.mastered.length<N && !s.rev) return null;
+  return s;
+}
+function b64e(str){ return btoa(unescape(encodeURIComponent(str))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); }
+function b64d(c){ c=String(c).trim().replace(/^.*[#&]?p=/,"").replace(/\s+/g,"").replace(/-/g,"+").replace(/_/g,"/"); while(c.length%4) c+="="; return decodeURIComponent(escape(atob(c))); }
+function encodeCode(s){ return "D2S"+b64e(JSON.stringify(packState(s))); }
+function decodeCode(c){ try{ c=String(c).trim(); const i=c.indexOf("D2S"); if(i<0) return null; return unpackState(JSON.parse(b64d(c.slice(i+3)))); }catch(e){ return null; } }
+const CK="d2spell";
+function readCookie(){ const m=document.cookie&&document.cookie.match(new RegExp("(?:^|; )"+CK+"=([^;]*)")); return m?decodeURIComponent(m[1]):null; }
+function readHash(){ const m=(location.hash||"").match(/[#&]p=([^&]+)/); return m?"D2S"+m[1]:null; }
+let idb=null;
+function idbOpen(){ return new Promise(res=>{ try{ if(!window.indexedDB) return res(null); const r=indexedDB.open("english1b_day2_spell",1);
+  r.onupgradeneeded=()=>r.result.createObjectStore("kv"); r.onsuccess=()=>{idb=r.result;res(idb);}; r.onerror=()=>res(null); }catch(e){res(null);} }); }
+function idbGet(){ return new Promise(res=>{ try{ if(!idb) return res(null); const q=idb.transaction("kv").objectStore("kv").get("state"); q.onsuccess=()=>res(q.result||null); q.onerror=()=>res(null);}catch(e){res(null);} }); }
+function idbPut(code){ try{ if(idb) idb.transaction("kv","readwrite").objectStore("kv").put(code,"state"); }catch(e){} }
+function load(){
+  const cands=[];
+  try{ const raw=localStorage.getItem(LS); if(raw){ const s=decodeCode(raw); if(s) cands.push(["本地存储",s]); } }catch(e){}
+  try{ const c=readCookie(); const s=c&&decodeCode(c); if(s) cands.push(["Cookie",s]); }catch(e){}
+  try{ const c=readHash(); const s=c&&decodeCode(c); if(s) cands.push(["网址",s]); }catch(e){}
+  cands.sort((a,b)=>b[1].t-a[1].t);
+  if(cands.length){ loadSrc=cands[0][0]; return cands[0][1]; }
+  loadSrc=null; return fresh();
+}
+let loadSrc=null;
+function save(){
+  S.t=Date.now();
+  const code=encodeCode(S);
+  try{ localStorage.setItem(LS,code); }catch(e){}
+  try{ if(code.length<3800) document.cookie=CK+"="+encodeURIComponent(code)+"; max-age=31536000; path=/; SameSite=Lax"; }catch(e){}
+  idbPut(code);
+  try{ const nh="#p="+code.slice(3); if(location.hash!==nh) history.replaceState(null,"",location.pathname+location.search+nh); }catch(e){}
+  const s=$("save"); if(s){ s.classList.add("show"); clearTimeout(save.t); save.t=setTimeout(()=>s.classList.remove("show"),900); }
+}
+function restoreLine(){
+  const el=$("restore"); if(!el) return;
+  if(!loadSrc){ el.textContent="🆕 新的一轮"; return; }
+  const n=S.mastered.length+1, left=new Set(S.queue).size;
+  el.textContent="✅ 已恢复上次进度："+(S.phase==="final"?"收尾轮，":"")+"第"+Math.min(n,WORDS.length)+"词，剩余"+left+"（来源："+loadSrc+"）";
+}
+function applyLoaded(){
+  $("auto").checked=!!S.auto; pick(S.voice); voiceUI();
+  render(true);
+  if(S.rev && cur()!=null) { const rv=S.rev, pd=S.pend; S.pend=pd; reveal(rv.msg,rv.cls,true); S.pend=pd; save(); }
+  restoreLine();
+}
+let revealed=false;   // current card answered
+function doPend(){ const id=S.queue[0]; if(S.pend==="shift") S.queue.shift(); else if(S.pend==="all"){ S.queue.shift(); S.queue=S.queue.filter(x=>x!==id); } S.pend=null; S.rev=null; }
+
+function cur(){ return S.queue.length ? S.queue[0] : null; }
+function insertLater(id, minOff, maxOff){
+  // remove existing future copies, then insert once with spacing
+  S.queue = [S.queue[0]].concat(S.queue.slice(1).filter(x=>x!==id));
+  const off=Math.min(S.queue.length, minOff+Math.floor(Math.random()*(maxOff-minOff+1)));
+  let pos=Math.max(1,off);
+  // avoid landing next to a similar word
+  for(let t=0;t<3 && pos<S.queue.length;t++){
+    const prev=S.queue[pos-1], nxt=S.queue[pos];
+    if((prev!=null&&prev!==S.queue[0]&&similar(prev,id))||(nxt!=null&&similar(nxt,id))) pos++; else break;
+  }
+  S.queue.splice(Math.min(pos,S.queue.length),0,id);
+}
+function addHard(id){ if(!S.hard.includes(id)) S.hard.push(id); S.mastered=S.mastered.filter(x=>x!==id); }
+
+/* ---------- counts / UI ---------- */
+function counts(){
+  const left=new Set(S.queue).size;
+  const rep = S.phase==="final" ? Object.keys(S.finalNeed).length : Object.values(S.reps).filter(n=>n>0).length;
+  $("cLeft").textContent=left; $("cDone").textContent=S.mastered.length; $("cRep").textContent=rep;
+  $("bar").style.width=(S.mastered.length/S.total*100)+"%";
+  $("phase").textContent = S.phase==="final" ? "🔁 模糊/不会词收尾轮：每个词再拼对 1 次" : "第一轮（含间隔重复）";
+  $("phase").className="w phase"+(S.phase==="final"?" final":"");
+}
+function render(restoring){
+  revealed=false; const keepP=S.pend, keepR=S.rev; S.pend=null; S.rev=null; if(restoring){ S.pend=keepP; S.rev=keepR; }
+  const id=cur();
+  if(id==null){ return finishPhase(); }
+  const w=WORDS[id];
+  $("done").classList.remove("show");
+  ["card","inputArea"].forEach(x=>$(x).style.display="");
+  $("card").classList.remove("rev");
+  $("unit").textContent=w.unit;
+  const need = S.phase==="final" ? 1 : (S.reps[id]||0);
+  $("repTag").style.display = need>0 ? "" : "none";
+  $("repTag").textContent = S.phase==="final" ? "收尾" : "还需拼对 "+need+" 次";
+  $("pos").textContent=w.posZh||"词组";
+  $("zh").textContent=w.zh;
+  $("en").textContent=w.en; $("phon").textContent=w.phon||"";
+  $("exEn").textContent=w.exEn; $("exZh").textContent=w.exZh;
+  $("ex").classList.remove("show");
+  $("fb").textContent=""; $("fb").className="w fb";
+  $("ans").value=""; $("ans").disabled=false;
+  $("inputArea").style.display=""; $("nextArea").style.display="none";
+  counts(); if(!restoring) save();
+  setTimeout(()=>$("ans").focus(),50);
+  if(!restoring && $("auto").checked) setTimeout(()=>speak(w.en,.9),250);
+}
+function reveal(msg,cls,silent){
+  revealed=true; S.rev={msg:msg,cls:cls};
+  const w=WORDS[cur()];
+  $("card").classList.add("rev");
+  $("ex").classList.add("show");
+  $("fb").textContent=msg; $("fb").className="w fb "+cls;
+  $("ans").disabled=true;
+  $("inputArea").style.display="none"; $("nextArea").style.display="";
+  if(!silent) speak(w.en,.9);
+  save();
+  setTimeout(()=>$("bNext").focus(),50);
+}
+
+/* ---------- actions ---------- */
+function norm(s){ return String(s||"").trim().toLowerCase().replace(/[’‘]/g,"'").replace(/\s+/g," "); }
+function onCorrect(){
+  const id=cur();
+  if(S.phase==="final"){
+    delete S.finalNeed[id];
+    if(!S.mastered.includes(id)) S.mastered.push(id);
+    S.pend="shift";
+    reveal("✅ 正确！收尾轮完成该词","ok");
+  } else {
+    const n=S.reps[id]||0;
+    if(n>1){ S.reps[id]=n-1; insertLater(id, 6, 9); S.pend="shift"; reveal("✅ 正确！还需再拼对 "+(n-1)+" 次，稍后再出现","ok"); }
+    else { S.reps[id]=0; if(!S.mastered.includes(id)) S.mastered.push(id);
+      S.pend="all";
+      reveal(n===1?"✅ 正确！这个词过关了":"✅ 正确！","ok"); }
+  }
+  counts(); save();
+}
+function onMiss(level){ // level: "fuzzy" | "no" | "wrong"
+  const id=cur();
+  addHard(id);
+  if(S.phase==="final"){
+    S.finalNeed[id]=1;
+    insertLater(id,4,6);
+    S.pend="shift";
+  } else {
+    const need = level==="fuzzy" ? REP_FUZZY : REP_NO;
+    S.reps[id]=Math.max(S.reps[id]||0, need);
+    insertLater(id,4,6);
+    S.pend="shift";
+  }
+  const msg = level==="fuzzy" ? "🟡 模糊：记住拼写，之后要再拼对 "+REP_FUZZY+" 次"
+           : level==="wrong" ? "❌ 拼错了，正确是 "+WORDS[id].en+"（之后要再拼对 "+REP_NO+" 次）"
+           : "🔴 不会：先听、看、读例句，之后要再拼对 "+REP_NO+" 次";
+  reveal(S.phase==="final" ? (level==="fuzzy"?"🟡 还不稳，稍后再来":"❌ 正确是 "+WORDS[id].en+"，稍后再来") : msg, level==="fuzzy"?"mid":"bad");
+  counts(); save();
+}
+function finishPhase(){
+  if(S.phase==="main" && S.hard.length){
+    S.phase="final"; S.finalNeed={};
+    const h=S.hard.slice();
+    // spread similar ones
+    for(let i=h.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [h[i],h[j]]=[h[j],h[i]]; }
+    h.forEach(id=>S.finalNeed[id]=1);
+    S.queue=h;
+    S.mastered=S.mastered.filter(x=>!h.includes(x));
+    save();
+    return render();
+  }
+  ["card","inputArea","nextArea","ex"].forEach(x=>{ $(x).style.display="none"; });
+  $("ex").classList.remove("show");
+  $("fb").textContent="";
+  $("done").classList.add("show");
+  $("doneMsg").textContent="41 词全部拼对！其中曾模糊/不会："+S.hard.length+" 个（已通过收尾轮）。";
+  S.mastered=WORDS.map((_,i)=>i);
+  counts(); save();
+}
+
+$("bSub").onclick=()=>{
+  if(revealed||cur()==null) return;
+  const v=norm($("ans").value);
+  if(!v){ $("fb").textContent="请先输入拼写，或点「模糊 / 不会」"; $("fb").className="w fb mid"; return; }
+  v===norm(WORDS[cur()].en) ? onCorrect() : onMiss("wrong");
+};
+$("bFuz").onclick=()=>{ if(!revealed&&cur()!=null) onMiss("fuzzy"); };
+$("bNo").onclick=()=>{ if(!revealed&&cur()!=null) onMiss("no"); };
+$("bNext").onclick=()=>{ if(!revealed) return; doPend(); save(); render(); };
+$("ans").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); $("bSub").click(); }});
+document.addEventListener("keydown",e=>{ if(e.key==="Enter"&&revealed&&document.activeElement!==$("ans")){ e.preventDefault(); $("bNext").click(); }});
+$("sp").onclick=()=>{ if(cur()!=null) speak(WORDS[cur()].en,.9); if(!revealed) $("ans").focus(); };
+$("spSlow").onclick=()=>{ if(cur()!=null) speak(WORDS[cur()].en,.62); if(!revealed) $("ans").focus(); };
+$("spEx").onclick=()=>{ if(cur()!=null) speak(WORDS[cur()].exEn,.88); };
+$("auto").onchange=()=>{ S.auto=$("auto").checked; save(); };
+$("bRestart").onclick=()=>{ const v=S.voice, a=S.auto; S=fresh(); S.voice=v; S.auto=a; save(); render(); };
+$("bClear").onclick=()=>{ if(!confirm("确定清除全部拼写进度？此操作不可恢复。")) return;
+  const v=S.voice; try{localStorage.removeItem(LS);}catch(e){} document.cookie=CK+"=; max-age=0; path=/"; S=fresh(); loadSrc=null; restoreLine(); S.voice=v; $("auto").checked=false; save(); render(); };
+
+/* ---------- TTS (UK female) ---------- */
+let enVoice=null, tier="none";
+function fem(n){ return /female|woman|emma|serena|kate|karen|susan|zira|hazel|martha|moira|fiona|tessa|victoria|aria|jenny|libby|sonia|amy|natalie/i.test(n) && !/\bmale\b|david|daniel|thomas|fred|arthur|george|oliver|rishi|ryan|james/i.test(n); }
+function male(n){ return /\bmale\b|david|daniel|thomas|fred|arthur|george|oliver|rishi|ryan|james|uk english male/i.test(n); }
+function score(v){ const l=(v.lang||"").toLowerCase(), n=v.name||""; const gb=/en(-|_)gb/.test(l)||/uk english|british/i.test(n);
+  let s=0; if(/google uk english female/i.test(n)) s+=1000; if(gb&&fem(n)) s+=800; if(gb&&!male(n)) s+=500; if(gb) s+=300;
+  if(!gb&&fem(n)) s+=150; if(/^en/.test(l)) s+=20; if(/samantha/i.test(n)) s-=80; if(male(n)) s-=200; if(!/^en/.test(l)) s-=500; return s; }
+function pick(pref){
+  if(!window.speechSynthesis){ enVoice=null; tier="none"; return; }
+  const en=(speechSynthesis.getVoices()||[]).filter(v=>/^en/i.test(v.lang||""));
+  enVoice=(pref&&en.find(v=>v.name===pref))||en.slice().sort((a,b)=>score(b)-score(a))[0]||null;
+  if(!enVoice){ tier="none"; return; }
+  const gb=/en(-|_)gb/i.test(enVoice.lang)||/uk english|british/i.test(enVoice.name);
+  const f=fem(enVoice.name)||(gb&&!male(enVoice.name));
+  tier = gb&&f?"ukf":gb?"uk":f?"f":"fb";
+}
+function voiceUI(){
+  $("vName").textContent=enVoice?enVoice.name:(window.speechSynthesis?"未找到英语语音":"不支持朗读");
+  $("vTag").textContent={ukf:"（英式女声）",uk:"（英式）",f:"（女声·后备）",fb:"（后备）",none:""}[tier];
+  $("vTip").classList.toggle("show",tier!=="ukf");
+  const sel=$("vSel"); sel.innerHTML="";
+  const en=(window.speechSynthesis?speechSynthesis.getVoices():[]).filter(v=>/^en/i.test(v.lang||"")).sort((a,b)=>score(b)-score(a));
+  if(!en.length){ const o=document.createElement("option"); o.textContent="无可用英语语音"; sel.appendChild(o); }
+  en.forEach(v=>{ const o=document.createElement("option"); o.value=v.name;
+    o.textContent=(/en(-|_)gb/i.test(v.lang)?"🇬🇧 ":"🌐 ")+v.name+" ("+v.lang+")"; sel.appendChild(o); });
+  if(enVoice) sel.value=enVoice.name;
+}
+function initVoices(){ pick(S.voice); voiceUI(); }
+function speak(text,rate){
+  if(!text) return;
+  if(!window.speechSynthesis){ alert("当前浏览器不支持朗读，请用 Chrome / Edge 打开。"); return; }
+  if(!enVoice) initVoices();
+  try{ speechSynthesis.cancel(); }catch(e){}
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang=enVoice?enVoice.lang:"en-GB"; u.rate=rate||.92; u.pitch=1.05;
+  if(enVoice) u.voice=enVoice;
+  setTimeout(()=>{ try{ speechSynthesis.resume(); speechSynthesis.speak(u); }catch(e){} },60);
+}
+$("vSel").onchange=()=>{ S.voice=$("vSel").value; pick(S.voice); voiceUI(); save(); };
+
+/* ---------- boot ---------- */
+S=load();
+initVoices();
+if(window.speechSynthesis && "onvoiceschanged" in speechSynthesis) speechSynthesis.onvoiceschanged=initVoices;
+applyLoaded();
+idbOpen().then(idbGet).then(code=>{ const s=code&&decodeCode(code);
+  if(s && s.t>(S.t||0)+1000){ S=s; loadSrc="IndexedDB"; applyLoaded(); } else save(); });
+window.addEventListener("pagehide",()=>save()); document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden") save(); });
+$("bExport").onclick=()=>{ const c=encodeCode(S);
+  const done=()=>{ $("ioMsg").textContent="✅ 进度码已复制（"+c.length+"字符），请粘贴到备忘录保存"; };
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(c).then(done,()=>prompt("复制下面的进度码：",c)); else prompt("复制下面的进度码：",c); };
+$("bImport").onclick=()=>{ const c=prompt("粘贴进度码（D2S 开头）："); if(!c) return; const s=decodeCode(c);
+  if(!s){ alert("进度码无效，请检查是否复制完整。"); return; } S=s; loadSrc="导入"; save(); applyLoaded(); $("ioMsg").textContent="✅ 导入成功"; };
+</script></body></html>
